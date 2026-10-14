@@ -1,0 +1,32 @@
+# VisionAid Smart Glasses — Python Dependencies
+# ==============================================
+
+# ── Core ──────────────────────────────────────
+python-dotenv>=1.0.0
+numpy>=1.24.0
+opencv-python-headless>=4.8.0
+Pillow>=10.0.0
+aiohttp>=3.9.0
+cryptography>=41.0.0        # AES-256-GCM encryption & key management
+
+# ── AI / Vision (SOTA Open Source — runs locally, 0 API keys) ──
+ultralytics>=8.3.0          # YOLO11 & YOLOv8 real-time object & hazard detection
+torch>=2.1.0                # PyTorch
+torchvision>=0.16.0         # Vision models
+transformers>=4.40.0        # Depth Anything v2 & Moondream2 VLM
+moondream>=0.0.5            # Moondream2 tiny 1.86B edge VLM for offline scene understanding
+easyocr>=1.7.0              # Offline OCR (80+ languages)
+face-recognition>=1.3.0     # Local face recognition (dlib-based)
+
+# ── Audio (SOTA Open Source — runs locally, 0 API keys) ────────
+kokoro>=0.3.0               # Kokoro-82M SOTA human-grade neural voice
+piper-tts>=1.2.0            # Piper TTS fast edge neural voice
+pyttsx3>=2.90               # Universal offline TTS fallback
+faster-whisper>=1.0.0       # Speech-to-text for voice commands (CTranslate2 INT8)
+sounddevice>=0.4.6          # Low-latency audio I/O for mic & speakers
+
+# ── Communication ────────────────────────────
+bleak>=0.21.0               # Authenticated BLE communication with ESP32
+
+# ── AI / Vision (Cloud — completely optional) ───────────
+google-genai>=1.0.0         # Optional Gemini API for cloud scene queries

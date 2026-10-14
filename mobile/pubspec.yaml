@@ -1,0 +1,26 @@
+name: visionaid_companion
+description: "Accessible companion app for VisionAid Smart Glasses"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_blue_plus: ^1.31.0      # BLE communication with ESP32-S3
+  provider: ^6.1.1                # State management / ViewModel
+  shared_preferences: ^2.2.2      # Persistent user settings
+  camera: ^0.10.5+9               # For enrolling faces with phone camera
+  path_provider: ^2.1.2
+  vibration: ^2.0.0               # Phone tactile confirmation
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

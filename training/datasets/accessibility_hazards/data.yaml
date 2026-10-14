@@ -1,0 +1,16 @@
+path: /home/eishit/Documents/glasses/training/datasets/accessibility_hazards
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: stairs_up
+  1: stairs_down
+  2: curb
+  3: head_hazard
+  4: ground_obstacle
+  5: pole_bollard
+  6: glass_door
+  7: crosswalk
+  8: pedestrian_signal
+  9: vehicle
+  10: person
