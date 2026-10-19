@@ -163,22 +163,26 @@ module right_temple() {
         translate([temple_thick/2, 4.0, -1])
             cylinder(d=hinge_screw_dia, h=temple_h_front + 2);
 
-        // Battery Cavity (Fits 450mAh LiPo: 38 x 20.8 x 5.4 mm)
-        translate([temple_thick - 5.4, 14, 1.5])
-            cube([5.5, 38, 19.0]);
+        // Battery Cavity (Fits up to 800mAh LiPo: 42 x 20.0 x 6.0 mm)
+        translate([temple_thick - 6.0, 13, 1.5])
+            cube([6.1, 42, 19.5]);
 
-        // TP4056 Charger Cavity (30 x 17 x 5.0 mm)
-        translate([temple_thick - 5.0, 60, 1.5])
-            cube([5.1, 30, 15.0]);
+        // Right Bone Conduction Transducer Cavity
+        translate([temple_thick - 2.5, 56, 3.0])
+            cube([2.5, 14, 11.5]);
 
-        // USB-C Port Cutout on bottom edge
-        translate([1.5, 75, -1])
-            cube([4.0, 9.5, 3.0]);
+        // TP4056 Charger Cavity (24 x 16 x 5.0 mm)
+        translate([temple_thick - 5.0, 73, 1.5])
+            cube([5.1, 20, 15.0]);
 
-        // Dual Tactile Click Buttons on top edge
-        translate([temple_thick/2, 32, temple_h_front - 2])
+        // USB-C Port Cutout on bottom edge (9.5mm x 3.5mm)
+        translate([1.5, 78, -1])
+            cube([4.0, 9.5, 3.5]);
+
+        // Dual Tactile Click Buttons on top edge (u=24mm and u=38mm)
+        translate([temple_thick/2, 24, temple_h_front - 2])
             cylinder(d=4.0, h=4);
-        translate([temple_thick/2, 46, temple_h_front - 2])
+        translate([temple_thick/2, 38, temple_h_front - 2])
             cylinder(d=4.0, h=4);
     }
 }

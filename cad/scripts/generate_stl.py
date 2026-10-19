@@ -417,17 +417,179 @@ def build_left_temple_open_chassis():
 # =========================================================================
 # 4. TAPERED SNAP-FIT & SCREW-LOCKED TEMPLE LID
 # =========================================================================
-def build_temple_lid(is_left=True):
+# =========================================================================
+# 4. REVOLUTIONIZED RIGHT TEMPLE OPEN CHASSIS TRAY (BATTERY + CHARGER + BUTTONS)
+# =========================================================================
+def build_right_temple_open_chassis():
     """
-    Generates the 0.8mm smooth cover plate that seals the temple.
-    - Follows arm taper from 12mm to 84mm exactly.
-    - 2x M1.4/M1.6 Countersunk Screw Holes (u=38mm and u=82mm).
-    - 4x Mating Catch Tabs (u=24mm and u=64mm) that click into arm slots!
-    - 1x Rear Pry-Open Bevel Notch (u=83mm).
+    Constructs the Right Temple Arm as a 100% NON-OVERLAPPING OPEN CHASSIS TRAY.
+    - Zone 1: Power & Controls Tray (u = 0.0 to 96.0mm)
+      * Floor plate: Z = 0.0..1.8mm
+      * Top perimeter rail with dual click button apertures (u=24mm and u=38mm).
+      * Bottom perimeter rail with USB-C port cutout (u=80..89.5mm).
+      * Front Hinge Knuckle with M1.6/M2 screw hole & browline power wire tunnel.
+      * Bay 1: LiPo Battery Chamber (u=12..52mm, fits up to 800mAh 40x20x6mm / 450mAh 502035).
+      * Divider 1 with bottom wire raceway notch + M1.4/M1.6 Screw Boss 1 (u=53.0mm).
+      * Bay 2: Right Bone Conduction Transducer chamber (u=54..72mm) + acoustic cheek swell.
+      * Divider 2 with bottom wire raceway notch.
+      * Bay 3: TP4056 USB-C Charger Chamber (u=74..92mm) aligned with bottom USB-C port.
+      * Rear Bulkhead + M1.4/M1.6 Screw Boss 2 (u=94.0mm).
+    - Zone 2: Ear Stem & Hook (u = 96.0 to 145.0mm)
+      * Starts strictly at u = 96.0mm (zero floor overlap).
+      * 100% smooth continuous quad-lofted solid mesh.
     """
     m = STLBuilder()
-    u_steps = 24
-    u_vals = np.linspace(12.0, 84.0, u_steps)
+
+    # -------------------------------------------------------------------------
+    # ZONE 1: POWER & CONTROLS TRAY (u = 0.0 to 96.0mm)
+    # -------------------------------------------------------------------------
+    u_tray_steps = 28
+    u_tray = np.linspace(0.0, 96.0, u_tray_steps)
+
+    # 1. Floor Plate (Z = 0.0 to 1.8mm)
+    for k in range(u_tray_steps - 1):
+        u1, u2 = u_tray[k], u_tray[k+1]
+        yt1, yb1, _ = get_temple_profile(u1)
+        yt2, yb2, _ = get_temple_profile(u2)
+
+        # Bottom face (Z=0 on bed)
+        m.add_quad([u1, yb1, 0.0], [u2, yb2, 0.0], [u2, yt2, 0.0], [u1, yt1, 0.0])
+        # Inner floor surface (Z=1.8mm)
+        m.add_quad([u1, yb1, 1.8], [u1, yt1, 1.8], [u2, yt2, 1.8], [u2, yb2, 1.8])
+        # Bottom side boundary
+        m.add_quad([u1, yb1, 0.0], [u1, yb1, 1.8], [u2, yb2, 1.8], [u2, yb2, 0.0])
+        # Top side boundary
+        m.add_quad([u1, yt1, 0.0], [u2, yt1, 0.0], [u2, yt1, 1.8], [u1, yt1, 1.8])
+
+    # End cap at u=0 (hinge bottom face)
+    yt0, yb0, _ = get_temple_profile(0.0)
+    m.add_quad([0.0, yb0, 0.0], [0.0, yt0, 0.0], [0.0, yt0, 1.8], [0.0, yb0, 1.8])
+
+    # 2. Top Perimeter Rail (Z=1.8 to 7.2mm, u=0 to 96mm)
+    # Includes 2 catch slots for lid tabs at u in [26..32] and [68..74]
+    for k in range(u_tray_steps - 1):
+        u1, u2 = u_tray[k], u_tray[k+1]
+        yt1, _, th1 = get_temple_profile(u1)
+        yt2, _, th2 = get_temple_profile(u2)
+        u_mid = (u1 + u2) / 2.0
+        is_slot = (26.0 <= u_mid <= 32.0) or (68.0 <= u_mid <= 74.0)
+        rail_z_top = th1 - 1.2 if is_slot else th1
+
+        m.add_quad([u1, yt1, 1.8], [u2, yt2, 1.8], [u2, yt2, rail_z_top], [u1, yt1, rail_z_top])
+        m.add_quad([u1, yt1 - 1.6, 1.8], [u1, yt1 - 1.6, rail_z_top], [u2, yt2 - 1.6, rail_z_top], [u2, yt2 - 1.6, 1.8])
+        m.add_quad([u1, yt1 - 1.6, rail_z_top], [u1, yt1, rail_z_top], [u2, yt2, rail_z_top], [u2, yt2 - 1.6, rail_z_top])
+
+    # 3. Bottom Perimeter Rail (Z=1.8 to 7.2mm, u=0 to 96mm)
+    # Includes catch slots at [26..32] & [68..74], AND USB-C cutout at [80.0..89.5mm]
+    for k in range(u_tray_steps - 1):
+        u1, u2 = u_tray[k], u_tray[k+1]
+        _, yb1, th1 = get_temple_profile(u1)
+        _, yb2, th2 = get_temple_profile(u2)
+        u_mid = (u1 + u2) / 2.0
+        is_slot = (26.0 <= u_mid <= 32.0) or (68.0 <= u_mid <= 74.0)
+        is_usbc = (80.0 <= u_mid <= 89.5)
+
+        if is_usbc:
+            rail_z_top = 1.8  # Flush with floor: leaves bottom 9.5mm open for USB-C cable!
+        elif is_slot:
+            rail_z_top = th1 - 1.2
+        else:
+            rail_z_top = th1
+
+        if not is_usbc:
+            m.add_quad([u1, yb1, 1.8], [u1, yb1, rail_z_top], [u2, yb2, rail_z_top], [u2, yb2, 1.8])
+            m.add_quad([u1, yb1 + 1.6, 1.8], [u2, yb2 + 1.6, 1.8], [u2, yb2 + 1.6, rail_z_top], [u1, yb1 + 1.6, rail_z_top])
+            m.add_quad([u1, yb1, rail_z_top], [u1, yb1 + 1.6, rail_z_top], [u2, yb2 + 1.6, rail_z_top], [u2, yb2, rail_z_top])
+
+    # 4. Front Reinforced Hinge Knuckle (u=0 to 12mm)
+    m.add_box(0.0, 1.6, 1.8, 12.0, 17.2, 5.4)
+    # M1.6/M2 through-hole
+    m.add_pipe(4.0, 11.0, 0.0, r_out=3.6, r_in=1.0, height=7.2, axis='z', segments=16)
+    # Browline power wiring conduit tunnel (2-wire pass through)
+    m.add_box(0.0, 8.0, 2.2, 12.0, 6.5, 2.0)
+
+    # 5. Bay 1: Battery Retaining Shelves (u=12..52mm)
+    m.add_box(13.0, 1.6, 1.8, 1.5, 17.2, 1.0)   # Front support shelf
+    m.add_box(50.5, 1.6, 1.8, 1.5, 17.2, 1.0)   # Rear support shelf
+
+    # Dual Tactile Click Button Guides on top edge (u=24mm and u=38mm)
+    m.add_pipe(24.0, 20.2, 1.8, r_out=2.8, r_in=1.8, height=5.4, axis='z', segments=16)
+    m.add_pipe(38.0, 20.2, 1.8, r_out=2.8, r_in=1.8, height=5.4, axis='z', segments=16)
+
+    # 6. Divider 1 + M1.4/M1.6 Screw Boss 1 (u=52 to 54mm)
+    m.add_box(52.0, 4.0, 1.8, 2.0, 14.8, 5.4)   # Divider leaves bottom wire notch open
+    m.add_pipe(53.0, 11.0, 1.8, r_out=2.4, r_in=0.75, height=5.4, axis='z', segments=16)
+
+    # 7. Bay 2: Right Bone Conduction Sound Chamber (u=54..72mm) + Ergonomic Skin Swell
+    m.add_box(55.0, 3.0, 7.2, 16.0, 14.0, 2.8)  # Acoustic skin-contact swell for right cheek
+
+    # 8. Divider 2 (u=72 to 74mm) with wiring notch
+    m.add_box(72.0, 4.0, 1.8, 2.0, 12.5, 5.4)
+
+    # 9. Bay 3: TP4056 USB-C Charger Chamber (u=74..92mm)
+    # Board retaining ledges
+    m.add_box(74.5, 1.6, 1.8, 1.5, 13.5, 1.0)
+    m.add_box(90.5, 1.6, 1.8, 1.5, 13.5, 1.0)
+
+    # 10. Solid Rear Bulkhead + M1.4/M1.6 Screw Boss 2 (u=92 to 96mm)
+    m.add_box(92.0, 1.6, 1.8, 4.0, 13.5, 5.4)
+    m.add_pipe(94.0, 8.5, 1.8, r_out=2.4, r_in=0.75, height=5.4, axis='z', segments=16)
+
+    # -------------------------------------------------------------------------
+    # ZONE 2: 100% NON-OVERLAPPING SMOOTH QUAD-LOFTED EAR HOOK (u = 96 to 145mm)
+    # -------------------------------------------------------------------------
+    hook_steps = 22
+    u_hook = np.linspace(96.0, 145.0, hook_steps)
+    hook_slices = []
+    for u in u_hook:
+        yt, yb, th = get_temple_profile(u)
+        hook_slices.append([
+            [u, yb, 0.0],
+            [u, yt, 0.0],
+            [u, yt, th],
+            [u, yb, th]
+        ])
+
+    for k in range(hook_steps - 1):
+        s1 = hook_slices[k]
+        s2 = hook_slices[k+1]
+        m.add_quad(s1[0], s2[0], s2[1], s1[1]) # outer face
+        m.add_quad(s1[1], s2[1], s2[2], s1[2]) # top face
+        m.add_quad(s1[2], s2[2], s2[3], s1[3]) # inner face
+        m.add_quad(s1[3], s2[3], s2[0], s1[0]) # bottom face
+
+    # Rounded end cap at ear tip (u=145)
+    tip = hook_slices[-1]
+    m.add_quad(tip[0], tip[3], tip[2], tip[1])
+
+    return m
+
+# =========================================================================
+# 5. TAPERED SNAP-FIT & SCREW-LOCKED TEMPLE LIDS (LEFT & RIGHT)
+# =========================================================================
+def build_temple_lid(is_left=True):
+    """
+    Generates the 0.8mm smooth cover plate that seals either the left or right temple.
+    - Follows arm taper exactly.
+    - 2x M1.4/M1.6 Countersunk Screw Holes matching respective bosses.
+    - 4x Mating Catch Tabs clicking into arm rail slots.
+    - 1x Rear Pry-Open Bevel Notch for effortless servicing.
+    """
+    m = STLBuilder()
+
+    if is_left:
+        u_start, u_end = 12.0, 84.0
+        screw_positions = [(38.0, 11.0), (82.0, 8.5)]
+        tab_positions = [24.0, 64.0]
+        notch_u = 83.0
+    else: # Right temple lid
+        u_start, u_end = 12.0, 96.0
+        screw_positions = [(53.0, 11.0), (94.0, 8.5)]
+        tab_positions = [29.0, 71.0]
+        notch_u = 95.0
+
+    u_steps = 26
+    u_vals = np.linspace(u_start, u_end, u_steps)
     lid_slices = []
 
     for u in u_vals:
@@ -456,7 +618,7 @@ def build_temple_lid(is_left=True):
     m.add_quad(end[0], end[3], end[2], end[1])
 
     # 1. Mating Catch Tabs (Slide right into arm slots!)
-    for u_tab in [24.0, 64.0]:
+    for u_tab in tab_positions:
         yt_tab, yb_tab, _ = get_temple_profile(u_tab)
         # Top rail tab (6mm long, 0.8mm proud)
         m.add_box(u_tab - 3.0, yt_tab - 1.2, 0.0, 6.0, 1.0, 0.8)
@@ -464,27 +626,26 @@ def build_temple_lid(is_left=True):
         m.add_box(u_tab - 3.0, yb_tab + 0.2, 0.0, 6.0, 1.0, 0.8)
 
     # 2. Countersunk M1.4/M1.6 Screw Holes
-    # Screw Hole 1 (matches Boss 1 at u=38.0mm, y=11.0mm)
-    m.add_pipe(38.0, 11.0, -0.2, r_out=2.2, r_in=0.9, height=1.2, axis='z', segments=16)
-    # Screw Hole 2 (matches Boss 2 at u=82.0mm, y=8.5mm)
-    m.add_pipe(82.0, 8.5, -0.2, r_out=2.2, r_in=0.9, height=1.2, axis='z', segments=16)
+    for sx, sy in screw_positions:
+        m.add_pipe(sx, sy, -0.2, r_out=2.2, r_in=0.9, height=1.2, axis='z', segments=16)
+
+    # 3. Rear Pry-Open Bevel Notch
+    yt_n, _, _ = get_temple_profile(notch_u)
+    m.add_box(notch_u - 1.5, yt_n - 3.0, 0.4, 3.0, 1.8, 0.4)
 
     return m
 
 # =========================================================================
-# 5. DEDICATED LEFT TEMPLE KIT (CHASSIS + MATCHING TAPERED LID SIDE-BY-SIDE)
+# 6. DEDICATED TEMPLE KITS (CHASSIS + MATCHING TAPERED LID SIDE-BY-SIDE)
 # =========================================================================
 def build_left_temple_kit():
     """
-    Combines Open Chassis Tray AND Tapered Snap-Fit Lid side-by-side in one STL.
+    Combines Left Open Chassis Tray AND Matching Lid side-by-side in one STL.
     """
     master = STLBuilder()
-
-    # 1. Left Temple Open Chassis (at Y=0)
     chassis = build_left_temple_open_chassis()
     master.triangles.extend(chassis.triangles)
 
-    # 2. Matching Tapered Snap-Fit Lid (offset along Y by +28mm for side-by-side view)
     lid = build_temple_lid(is_left=True)
     for norm, v1, v2, v3 in lid.triangles:
         v1_t = [v1[0], v1[1] + 28.0, v1[2]]
@@ -494,8 +655,24 @@ def build_left_temple_kit():
 
     return master
 
+def build_right_temple_kit():
+    """
+    Combines Right Open Chassis Tray AND Matching Lid side-by-side in one STL.
+    """
+    master = STLBuilder()
+    chassis = build_right_temple_open_chassis()
+    master.triangles.extend(chassis.triangles)
+
+    lid = build_temple_lid(is_left=False)
+    for norm, v1, v2, v3 in lid.triangles:
+        v1_t = [v1[0], v1[1] + 28.0, v1[2]]
+        v2_t = [v2[0], v2[1] + 28.0, v2[2]]
+        v3_t = [v3[0], v3[1] + 28.0, v3[2]]
+        master.add_triangle(v1_t, v2_t, v3_t)
+
+    return master
 # =========================================================================
-# 6. RIGHT TEMPLE & MASTER ASSEMBLY (PRESERVED)
+# 7. ASSEMBLED PREVIEW HELPER (PRESERVED)
 # =========================================================================
 def build_temple_mesh(is_left=True, as_assembled=False):
     m = STLBuilder()
@@ -579,7 +756,7 @@ def build_complete_assembled_model():
 if __name__ == "__main__":
     print("=" * 75)
     print("🚀 VisionAid Commercial Smart Glasses STL Generator")
-    print("   Focus: Left Temple Screw Bosses + Matching Slots + Non-overlapping Mesh")
+    print("   Dual Open Chassis (Left & Right Temples) + Snap Lids + Screw Bosses")
     print("=" * 75)
 
     stl_dir = "cad/stl"
@@ -590,10 +767,13 @@ if __name__ == "__main__":
     assembled = build_complete_assembled_model()
     assembled.write_stl(f"{stl_dir}/visionaid_assembled_glasses.stl", "VisionAid_Assembled_Glasses")
 
-    # 2. DEDICATED LEFT TEMPLE INSPECTION KIT
-    print("\n🔍 2. Building Dedicated Left Temple Kit (Open Chassis + Lid)...")
+    # 2. DEDICATED TEMPLE INSPECTION KITS (Chassis + Lid Side-by-Side)
+    print("\n🔍 2. Building Dedicated Temple Kits (Open Chassis + Lid Side-by-Side)...")
     left_kit = build_left_temple_kit()
     left_kit.write_stl(f"{stl_dir}/left_temple_kit.stl", "VisionAid_Left_Temple_Kit")
+
+    right_kit = build_right_temple_kit()
+    right_kit.write_stl(f"{stl_dir}/right_temple_kit.stl", "VisionAid_Right_Temple_Kit")
 
     # 3. Individual Production STLs (For 3D Printing)
     print("\n🖨️  3. Building Individual Production STLs...")
@@ -606,9 +786,9 @@ if __name__ == "__main__":
     left_chassis.write_stl(f"{stl_dir}/2_left_temple_arm.stl", "VisionAid_Left_Temple_Chassis")
     left_chassis.write_stl(f"{stl_dir}/left_temple_arm.stl", "VisionAid_Left_Temple_Chassis")
 
-    right_temple = build_temple_mesh(is_left=False, as_assembled=False)
-    right_temple.write_stl(f"{stl_dir}/3_right_temple_arm.stl", "VisionAid_Right_Temple_Arm")
-    right_temple.write_stl(f"{stl_dir}/right_temple_arm.stl", "VisionAid_Right_Temple_Arm")
+    right_chassis = build_right_temple_open_chassis()
+    right_chassis.write_stl(f"{stl_dir}/3_right_temple_arm.stl", "VisionAid_Right_Temple_Chassis")
+    right_chassis.write_stl(f"{stl_dir}/right_temple_arm.stl", "VisionAid_Right_Temple_Chassis")
 
     left_lid = build_temple_lid(is_left=True)
     left_lid.write_stl(f"{stl_dir}/4_left_temple_lid.stl", "VisionAid_Left_Temple_Lid")
